@@ -7,6 +7,7 @@ add_library(duktape ${DUKTAPE_DIR}/duktape.c)
 add_library(script-lib
   duktape/engine.cpp
   v8/engine.cpp
+  lua/engine.cpp
   cout_delegate.cpp)
 
 add_definitions(-std=c++14)

@@ -472,4 +472,5 @@ target_link_libraries(app-lib
   ${WEBP_LIBRARIES}
   ${ZLIB_LIBRARIES}
   ${FREETYPE_LIBRARIES}
-  ${V8_LIBRARIES})
+  ${V8_LIBRARIES}
+  ${LUA_LIBRARIES})
