@@ -191,7 +191,7 @@ public:
 
     case Value::Type::OBJECT:
       if (auto object = static_cast<ScriptObject*>(value)) {
-        object->getInternalScriptObject()->makeLocal();
+        static_cast<DukScriptObject*>(object->getInternalScriptObject())->makeLocal();
       } else {
         duk_push_null(ctx);
       }
@@ -254,7 +254,7 @@ public:
     }
   }
 
-  void makeLocal() override {
+  void makeLocal() {
     auto handle = m_engine.get<DukEngine>()->m_handle;
     duk_push_object(handle);
     pushFunctions();
