@@ -74,7 +74,7 @@ LibreSprite can be compiled with two different back-ends:
 
 Run
 
-    vcpkg install freetype giflib gtest libjpeg-turbo libpng libwebp pixman tinyxml zlib --triplet x64-windows
+    vcpkg install freetype giflib gtest libjpeg-turbo libpng libwebp pixman tinyxml zlib v8 --triplet x64-windows
     
  Beware: `--triplet x64-windows` is only necessary for a 64 architecture
  build.
@@ -103,6 +103,12 @@ the [compilation](#compiling).
 Debian/Ubuntu:
 
     sudo apt-get install cmake g++ libfreetype6-dev libgif-dev libgtest-dev libjpeg-dev libpixman-1-dev libpng-dev libtinyxml-dev libx11-dev libxcursor-dev ninja-build zlib1g-dev
+
+Optional dependencies:
+    sudo apt-get install libv8-dev
+
+`libv8-dev` is necessary for running javascript scripts that use the latest
+language features. It also runs much more quickly (>20x) than duktape.
 
 The `libxcursor-dev` package is needed to
 [hide the hardware cursor](https://github.com/aseprite/aseprite/issues/913).
