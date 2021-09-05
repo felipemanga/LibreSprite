@@ -58,7 +58,8 @@ void RunScriptCommand::onLoadParams(const Params& params)
 void RunScriptCommand::onExecute(Context* context)
 {
   script::EngineDelegate::setDefault("gui");
-  script::Engine::setDefault(base::string_to_lower(base::get_file_extension(m_filename)), false);
+  auto extension = base::string_to_lower(base::get_file_extension(m_filename));
+  script::Engine::setDefault(extension, {extension});
   AppScripting engine;
   engine.evalFile(m_filename);
 
