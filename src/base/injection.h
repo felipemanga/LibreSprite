@@ -151,6 +151,7 @@ to delete AccountManager. Perfectly balanced...
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <typeinfo>
 #include <unordered_map>
 #include <unordered_set>
@@ -159,7 +160,7 @@ to delete AccountManager. Perfectly balanced...
 #include <iostream>
 #include <vector>
 
-#ifdef __GNUG__
+#if defined(__GNUG__) && defined(IS_DEBUG_BUILD)
 #include <cxxabi.h>
 #define HAS_DEMANGLE
 #endif
@@ -213,14 +214,16 @@ public:
   using Registry = std::unordered_map<std::string, RegistryEntry>;
 
   virtual std::string getName() const {
+#ifdef HAS_DEMANGLE
     int status;
     std::string result = typeid(*this).name();
-#ifdef HAS_DEMANGLE
     auto name = abi::__cxa_demangle(result.c_str(), 0, 0, &status);
     if (status == 0) result = name;
     free(name);
-#endif
     return result;
+#else
+    return std::to_string(reinterpret_cast<uintptr_t>(this));
+#endif
   }
 
   virtual ~Injectable() = default;
@@ -248,19 +251,28 @@ public:
     return all;
   }
 
-  static bool setDefault(const std::string& name, bool canFallback = true) {
+  static bool setDefault(const std::string& name, const std::unordered_set<std::string>& flags = {}) {
     auto& registry = getRegistry();
     auto it = registry.find(name);
     if (it == registry.end()) {
-      std::cout << "Invalid default: " << name << std::endl;
-      if (registry.size() && canFallback) {
-        it = registry.begin();
-        std::cout << "Falling back to: " << it->first << std::endl;
-      } else {
-        std::cout << "Nothing to fall back to." << std::endl;
-        return false;
+      for (auto& entry : registry) {
+        bool match = true;
+        for (auto& flag : flags) {
+          if (!entry.second.hasFlag(flag)) {
+            match = false;
+            break;
+          }
+        }
+        if (match) {
+          registry[""] = entry.second;
+          return true;
+        }
       }
+
+      std::cout << "Invalid default: " << name << std::endl;
+      return false;
     }
+
     registry[""] = it->second;
     return true;
   }
@@ -273,13 +285,17 @@ public:
       Injectable<BaseClass>::getRegistry()[name] = {
         []{
           auto ret = new DerivedClass();
+#if defined(IS_DEBUG_BUILD)
           std::cout << "Constructed " << ret->getName() << std::endl;
+#endif
           return ret;
         },
         [](BaseClass* instance){
           auto name = instance->getName();
           delete instance;
+#if defined(IS_DEBUG_BUILD)
           std::cout << "Destroyed " << name << std::endl;
+#endif
         },
         nullptr,
         flags
