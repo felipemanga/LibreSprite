@@ -28,6 +28,19 @@
 
 using namespace script;
 
+template<typename Inner>
+v8::Local<Inner> ToLocal(v8::Local<Inner> thing) {
+  return thing;
+}
+
+template<typename Inner>
+v8::Local<Inner> ToLocal(v8::MaybeLocal<Inner> thing) {
+  return thing.ToLocalChecked();
+}
+
+template<typename T>
+void Check(const T&){}
+
 class V8Engine : public Engine {
 public:
   inject<EngineDelegate> m_delegate;
@@ -81,7 +94,7 @@ public:
       initGlobals();
 
       // Create a string containing the JavaScript source code.
-      v8::Local<v8::String> source = v8::String::NewFromUtf8(m_isolate, code.c_str()).ToLocalChecked();
+      v8::Local<v8::String> source = ToLocal(v8::String::NewFromUtf8(m_isolate, code.c_str()));
 
       // Compile the source code.
       v8::Local<v8::Script> script =
@@ -155,7 +168,7 @@ public:
       return v8::Number::New(isolate, value);
 
     case Value::Type::STRING:
-      return v8::String::NewFromUtf8(isolate, value).ToLocalChecked();
+      return ToLocal(v8::String::NewFromUtf8(isolate, value));
 
     case Value::Type::OBJECT:
       if (auto object = static_cast<ScriptObject*>(value)) {
@@ -187,9 +200,9 @@ public:
     for (auto& entry : functions) {
       auto tpl = v8::FunctionTemplate::New(isolate, callFunc, v8::External::New(isolate, &entry.second));
       auto func = tpl->GetFunction(context).ToLocalChecked();
-      object->Set(context,
-                  v8::String::NewFromUtf8(isolate, entry.first.c_str()).ToLocalChecked(),
-                  func).Check();
+      Check(object->Set(context,
+                  ToLocal(v8::String::NewFromUtf8(isolate, entry.first.c_str())),
+                  func));
     }
   }
 
@@ -226,9 +239,9 @@ public:
       auto setter = setterTpl->GetFunction(context).ToLocalChecked();
 
       v8::PropertyDescriptor descriptor(getter, setter);
-      object->DefineProperty(context,
-                             v8::String::NewFromUtf8(isolate, entry.first.c_str()).ToLocalChecked(),
-                             descriptor).Check();
+      Check(object->DefineProperty(context,
+                             ToLocal(v8::String::NewFromUtf8(isolate, entry.first.c_str())),
+                             descriptor));
     }
   }
 
@@ -243,9 +256,9 @@ public:
   void makeGlobal(const std::string& name) override {
     auto& isolate = m_engine.get<V8Engine>()->m_isolate;
     auto& context = m_engine.get<V8Engine>()->context();
-    context->Global()->Set(context,
-                           v8::String::NewFromUtf8(isolate, name.c_str()).ToLocalChecked(),
-                           makeLocal()).Check();
+    Check(context->Global()->Set(context,
+                                 ToLocal(v8::String::NewFromUtf8(isolate, name.c_str())),
+                                 makeLocal()));
   }
 };
 
