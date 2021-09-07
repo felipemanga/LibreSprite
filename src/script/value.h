@@ -132,10 +132,14 @@ namespace script {
       return *this;
     }
 
-    operator std::string () const {
+    std::string str() const {
       if (type == Type::INT) return std::to_string(data.int_v);
       if (type == Type::DOUBLE) return std::to_string(data.double_v);
       return type == Type::STRING ? *data.string_v : std::string{};
+    }
+
+    operator std::string () const {
+      return str();
     }
 
     operator const char* () const {
