@@ -60,7 +60,8 @@ Window::Window(Type type, const std::string& text)
 
 Window::~Window()
 {
-  manager()->_closeWindow(this, false);
+  if (auto m = manager())
+    m->_closeWindow(this, false);
 }
 
 void Window::setAutoRemap(bool state)
