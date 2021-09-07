@@ -170,6 +170,8 @@ class inject {
 public:
   using BaseClass = BaseClass_;
 
+  inject(std::nullptr_t){}
+
   inject(const std::string& name = "");
 
   inject(inject&& other) {
@@ -180,6 +182,11 @@ public:
   inject(const inject& other) = delete;
 
   ~inject() {onDetach(m_ptr);}
+
+  void operator = (inject&& other) {
+    std::swap(m_ptr, other.m_ptr);
+    std::swap(onDetach, other.onDetach);
+  }
 
   BaseClass* operator -> () {return m_ptr;}
   BaseClass& operator * () {return *m_ptr;}
@@ -200,10 +207,11 @@ public:
   using BaseClass = BaseClass_;
   using AttachFunction = std::function<BaseClass*()>;
   using DetachFunction = std::function<void(BaseClass*)>;
-
+  using TypeMatch = std::function<bool(BaseClass*)>;
   struct RegistryEntry {
     AttachFunction attach;
     DetachFunction detach;
+    TypeMatch match;
     void* data;
     std::unordered_set<std::string> flags;
     bool hasFlag(const std::string& flag) {
@@ -229,8 +237,8 @@ public:
   virtual ~Injectable() = default;
 
   static Registry& getRegistry() {
-    static Registry registry;
-    return registry;
+    static Registry* registry = new Registry();
+    return *registry;
   }
 
   static std::vector<inject<BaseClass>> getAllWithFlag(const std::string& flag) {
@@ -278,25 +286,18 @@ public:
   }
 
   template<typename DerivedClass>
+  static bool matchType(BaseClass* base) {
+    return !!dynamic_cast<DerivedClass*>(base);
+  }
+
+  template<typename DerivedClass>
   class Regular {
   public:
     Regular(const std::string& name, const std::unordered_set<std::string>& flags = {}) {
-      // std::cout << "Registered regular class " << name << std::endl;
       Injectable<BaseClass>::getRegistry()[name] = {
-        []{
-          auto ret = new DerivedClass();
-#if defined(IS_DEBUG_BUILD)
-          std::cout << "Constructed " << ret->getName() << std::endl;
-#endif
-          return ret;
-        },
-        [](BaseClass* instance){
-          auto name = instance->getName();
-          delete instance;
-#if defined(IS_DEBUG_BUILD)
-          std::cout << "Destroyed " << name << std::endl;
-#endif
-        },
+        []{return new DerivedClass();},
+        [](BaseClass* instance){delete instance;},
+        matchType<DerivedClass>,
         nullptr,
         flags
       };
@@ -313,6 +314,7 @@ public:
           return &instance;
         },
         [](BaseClass* ptr){},
+        matchType<DerivedClass>,
         nullptr,
         flags
       };
@@ -331,11 +333,13 @@ public:
       }
     }
 
-    Provides(BaseClass* instance, const std::string& name = "", const std::unordered_set<std::string>& flags = {}) {
+    template<typename DerivedClass>
+    Provides(DerivedClass* instance, const std::string& name = "", const std::unordered_set<std::string>& flags = {}) {
       m_name = name;
       Injectable<BaseClass>::getRegistry()[name] = {
         [=] {return instance;},
         [](BaseClass* ptr) {},
+        matchType<DerivedClass>,
         this,
         flags
       };

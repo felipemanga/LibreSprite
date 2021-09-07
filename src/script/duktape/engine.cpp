@@ -123,11 +123,16 @@ public:
     m_printLastResult = true;
   }
 
+  bool raiseEvent(const std::string& event) override {
+    return eval("if (typeof onEvent === \"function\") onEvent(\"" + event + "\");");
+  }
+
   bool eval(const std::string& code) override {
-    bool errFlag = true;
+    bool success = true;
     try {
       if (duk_peval_string(m_handle, code.c_str()) != 0) {
         printLastResult();
+        success = false;
       }
 
       if (m_printLastResult &&
@@ -136,14 +141,14 @@ public:
       }
 
       duk_pop(m_handle);
-      errFlag = false;
     } catch (const std::exception& ex) {
       std::string err = "Error: ";
       err += ex.what();
       m_delegate->onConsolePrint(err.c_str());
-      errFlag = true;
+      success = false;
     }
-    return errFlag;
+    execAfterEval();
+    return success;
   }
 };
 

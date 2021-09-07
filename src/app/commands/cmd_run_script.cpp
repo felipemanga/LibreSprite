@@ -5,7 +5,6 @@
 // it under the terms of the GNU General Public License version 2 as
 // published by the Free Software Foundation.
 
-#include "base/string.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -52,11 +51,7 @@ void RunScriptCommand::onLoadParams(const Params& params)
 void RunScriptCommand::onExecute(Context* context)
 {
   script::EngineDelegate::setDefault("gui");
-  auto extension = base::string_to_lower(base::get_file_extension(m_filename));
-  script::Engine::setDefault(extension, {extension});
-  AppScripting engine;
-  engine.evalFile(m_filename);
-
+  AppScripting::evalFile(m_filename);
   ui::Manager::getDefault()->invalidate();
 }
 
