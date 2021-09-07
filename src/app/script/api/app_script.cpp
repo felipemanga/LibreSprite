@@ -38,7 +38,7 @@ namespace app {
 class AppScriptObject : public script::ScriptObject {
 public:
   inject<ScriptObject> m_pixelColor{"pixelColor"};
-  std::vector<inject<ScriptObject>>  m_documents;
+  std::vector<inject<ScriptObject>>  m_objects;
 
   AppScriptObject() {
     addProperty("activeFrameNumber", [this]{return updateSite() ? m_site.frame() : 0;})
@@ -57,8 +57,15 @@ public:
         .documentation("Read-only. Returns LibreSprite's current version as a string.");
     addMethod("documentation", &AppScriptObject::documentation)
         .documentation("Prints this text.");
+    addMethod("createDialog", &AppScriptObject::createDialog)
+      .documentation("Creates a dialog window");
     makeGlobal("app");
     init();
+  }
+
+  ScriptObject* createDialog() {
+    m_objects.emplace_back("DialogScriptObject");
+    return m_objects.back();
   }
 
   void documentation() {
@@ -155,9 +162,9 @@ public:
     int layerIndex = m_site.layerIndex();
     int frameIndex = m_site.frame();
 
-    m_documents.emplace_back("DocumentScriptObject");
+    m_objects.emplace_back("DocumentScriptObject");
 
-    auto sprite = m_documents.back()->get<ScriptObject*>("sprite");
+    auto sprite = m_objects.back()->get<ScriptObject*>("sprite");
     if (!sprite) {
       std::cout << "No sprite in document" << std::endl;
       return nullptr;
@@ -185,7 +192,7 @@ public:
     if (newDoc == oldDoc)
       return {};
 
-    m_documents.emplace_back("DocumentScriptObject");
+    m_objects.emplace_back("DocumentScriptObject");
     return inject<ScriptObject>{"activeSprite"}.get();
   }
 
