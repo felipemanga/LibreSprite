@@ -59,7 +59,7 @@ namespace app {
       return false;
     }
 
-    auto extension = base::string_to_lower(base::get_file_extension(filename));
+    auto extension = base::string_to_lower(base::get_file_extension(fileName));
     script::Engine::setDefault(extension, {extension});
 
     engine = nullptr;

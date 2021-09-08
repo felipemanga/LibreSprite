@@ -56,24 +56,28 @@ public:
     m_printLastResult = true;
   }
 
+  bool raiseEvent(const std::string& event) override {
+    return eval("if onEvent~=nil then onEvent(\"" + event + "\") end");
+  }
+
   bool eval(const std::string& code) override {
-    bool errFlag = true;
+    bool success = true;
     try {
 
       if (luaL_loadstring(L, code.c_str()) == LUA_OK) {
         if (lua_pcall(L, 0, 0, 0) == LUA_OK) {
           lua_pop(L, lua_gettop(L));
-          errFlag = false;
-        }
-      }
+        } else success = false;
+      } success = false;
 
     } catch (const std::exception& ex) {
       std::string err = "Error: ";
       err += ex.what();
       m_delegate->onConsolePrint(err.c_str());
-      errFlag = true;
+      success = false;
     }
-    return errFlag;
+    execAfterEval();
+    return success;
   }
 };
 

@@ -295,7 +295,7 @@ public:
   public:
     Regular(const std::string& name, const std::unordered_set<std::string>& flags = {}) {
       Injectable<BaseClass>::getRegistry()[name] = {
-        []{return new DerivedClass();},
+        []()->BaseClass*{return new DerivedClass();},
         [](BaseClass* instance){delete instance;},
         matchType<DerivedClass>,
         nullptr,

@@ -35,6 +35,7 @@ v8::Local<Inner> ToLocal(v8::Local<Inner> thing) {
 
 template<typename Inner>
 v8::Local<Inner> ToLocal(v8::MaybeLocal<Inner> thing) {
+  if (thing.IsEmpty()) return {};
   return thing.ToLocalChecked();
 }
 
@@ -77,8 +78,12 @@ public:
     m_printLastResult = true;
   }
 
+  bool raiseEvent(const std::string& event) override {
+    return eval("if (typeof onEvent === \"function\") onEvent(\"" + event + "\");");
+  }
+
   bool eval(const std::string& code) override {
-    bool errFlag = true;
+    bool success = true;
     try {
       v8::Isolate::Scope isolatescope(m_isolate);
       // Create a stack-allocated handle scope.
@@ -97,30 +102,32 @@ public:
       v8::Local<v8::String> source = ToLocal(v8::String::NewFromUtf8(m_isolate, code.c_str()));
 
       // Compile the source code.
-      v8::Local<v8::Script> script =
-        v8::Script::Compile(context, source).ToLocalChecked();
-
+      v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context, source);
       // Run the script to get the result.
-      v8::MaybeLocal<v8::Value> result = script->Run(context);
+      v8::MaybeLocal<v8::Value> result;
+      if (!script.IsEmpty()) {
+        result = ToLocal(script)->Run(context);
+      }
+
       if (result.IsEmpty()) {
         if (trycatch.HasCaught()) {
           v8::Local<v8::Value> exception = trycatch.Exception();
           v8::String::Utf8Value utf8(m_isolate, exception);
           m_delegate->onConsolePrint(*utf8);
+          success = false;
         }
       } else if (m_printLastResult) {
         v8::String::Utf8Value utf8(m_isolate, result.ToLocalChecked());
         m_delegate->onConsolePrint(*utf8);
       }
-
-      errFlag = false;
     } catch (const std::exception& ex) {
       std::string err = "Error: ";
       err += ex.what();
       m_delegate->onConsolePrint(err.c_str());
-      errFlag = true;
+      success = false;
     }
-    return errFlag;
+    execAfterEval();
+    return success;
   }
 };
 
