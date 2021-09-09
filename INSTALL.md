@@ -65,7 +65,10 @@ You'll need the following dependencies to compile LibreSprite:
 
 Debian/Ubuntu:
 
-    sudo apt-get install cmake g++ libfreetype6-dev libgif-dev libgtest-dev libjpeg-dev libpixman-1-dev libpng-dev libtinyxml-dev libx11-dev libxcursor-dev ninja-build zlib1g-dev
+    sudo apt-get install cmake g++ libfreetype6-dev libgif-dev libgtest-dev libjpeg-dev libpixman-1-dev libpng-dev libtinyxml-dev libx11-dev libxcursor-dev ninja-build zlib1g-dev libnode-dev
+
+The `libnode-dev` package (or v8-r on Arch) is needed for modern Javascript support,
+but is otherwise an optional dependency and can be omitted if necessary.
 
 The `libxcursor-dev` package is needed to
 [hide the hardware cursor](https://github.com/aseprite/aseprite/issues/913).
@@ -74,7 +77,7 @@ The `libxcursor-dev` package is needed to
 
 To install the required dependencies with vcpkg, run:
 
-    vcpkg install freetype giflib gtest libjpeg-turbo libpng libwebp pixman tinyxml zlib --triplet x64-windows
+    vcpkg install freetype giflib gtest libjpeg-turbo libpng libwebp pixman tinyxml zlib v8 --triplet x64-windows
     
 Beware: `--triplet x64-windows` is only necessary for a 64 architecture
 build.
