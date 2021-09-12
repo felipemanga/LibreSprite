@@ -4,11 +4,11 @@
 // This file is released under the terms of the MIT license.
 // Read LICENSE.txt for more information.
 
-#ifndef SHE_ALLEG4_ALLEG_DISPLAY_H_INCLUDED
-#define SHE_ALLEG4_ALLEG_DISPLAY_H_INCLUDED
-#include <SDL2/SDL_mouse.h>
+#ifndef SHE_SDL2_DISPLAY_H
+#define SHE_SDL2_DISPLAY_H
 #pragma once
 
+#include <SDL2/SDL_mouse.h>
 #include "she/display.h"
 
 struct SDL_Window;
@@ -52,7 +52,6 @@ namespace she {
 
         void present();
     private:
-        SDL_Surface* m_nativeSurface;
         SDL_Window* m_window;
         SDL_Renderer* m_renderer;
         SDL_Cursor* m_cursor;

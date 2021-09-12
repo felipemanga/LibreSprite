@@ -33,8 +33,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include "she/sdl2/display_events.h"
-
 static she::System* g_instance = nullptr;
 static std::unordered_map<int, she::Event::MouseButton> mouseButtonMapping = {
     {SDL_BUTTON_LEFT, she::Event::LeftButton},
@@ -252,10 +250,10 @@ namespace sdl {
                         continue;
 
                     case SDL_WINDOWEVENT_RESIZED: {
-                        std::cout << "Resized" << std::endl;
                         auto display = sdl::windowIdToDisplay[sdlEvent.window.windowID];
                         display->setWidth(sdlEvent.window.data1);
                         display->setHeight(sdlEvent.window.data2);
+                        display->recreateSurface();
                         event.setType(Event::ResizeDisplay);
                         event.setDisplay(display);
                         return;
@@ -279,10 +277,12 @@ namespace sdl {
                 case SDL_MOUSEWHEEL:
                     event.setType(Event::MouseWheel);
                     event.setModifiers(getSheModifiers());
-                    event.setWheelDelta({0, -sdlEvent.wheel.y});
+                    event.setWheelDelta({-sdlEvent.wheel.x, -sdlEvent.wheel.y});
+                    int x, y;
+                    SDL_GetMouseState(&x, &y);
                     event.setPosition({
-                            sdlEvent.wheel.x / unique_display->scale(),
-                            sdlEvent.wheel.y / unique_display->scale()
+                            x / unique_display->scale(),
+                            y / unique_display->scale()
                         });
                     return;
 
@@ -380,29 +380,8 @@ namespace sdl {
     class SDL2System : public CommonSystem {
     public:
         SDL2System() {
-//     if (allegro_init() < 0)
-//       throw base::Exception("Cannot initialize Allegro library: %s", allegro_error);
-
-//     set_uformat(U_UTF8);
-// #if MAKE_VERSION(ALLEGRO_VERSION, ALLEGRO_SUB_VERSION, ALLEGRO_WIP_VERSION) >= MAKE_VERSION(4, 4, 0)
-//     _al_detect_filename_encoding();
-// #endif
-//     install_timer();
-
-//     // Register PNG as a supported bitmap type
-//     register_bitmap_file_type("png", load_png, save_png);
-
-//     // Init event sources
-//     display_events_init();
-// #ifdef USE_KEY_POLLER
-//     key_poller_init();
-// #endif
-// #ifdef USE_MOUSE_POLLER
-//     mouse_poller_init();
-// #endif
-
-                g_instance = this;
-            }
+            g_instance = this;
+        }
 
         ~SDL2System() {
             IMG_Quit();
@@ -463,28 +442,6 @@ namespace sdl {
             SDL_Surface* bmp = IMG_Load(filename);
             if (!bmp)
               throw std::runtime_error("Error loading image");
-
-            // if (bmp->format->BitsPerPixel == 32) {
-            //     auto surface = new SDL2Surface(bmp->w, bmp->h, 32, SDL2Surface::DeleteAndDestroy);
-            //     // SDL_BlitSurface(bmp, nullptr, (SDL_Surface*) surface->nativeHandle(), nullptr);
-
-            //     int max = bmp->h * bmp->w;
-            //     auto data = reinterpret_cast<uint8_t*>(bmp->pixels);
-            //     auto out = reinterpret_cast<uint8_t*>(((SDL_Surface*)surface->nativeHandle())->pixels);
-            //     for (int i = 0; i < max; i++, data += 4, out += 4) {
-            //         int a = data[3];
-            //         int b = data[0];// * a / 255;
-            //         int g = data[1];// * a / 255;
-            //         int r = data[2];// * a / 255;
-            //         out[0] = b;
-            //         out[1] = g;
-            //         out[2] = r;
-            //         out[3] = a;
-            //     }
-
-            //     SDL_FreeSurface(bmp);
-            //     return surface;
-            // }
 
             std::cout << "Loading " << filename << " "
                       << std::to_string(bmp->format->BitsPerPixel) << " "
