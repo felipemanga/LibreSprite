@@ -76,7 +76,7 @@ public:
       m_delegate->onConsolePrint(err.c_str());
       success = false;
     }
-    execAfterEval();
+    execAfterEval(success);
     return success;
   }
 };

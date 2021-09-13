@@ -194,7 +194,7 @@ public:
   operator BaseClass* () {return m_ptr;}
 
   template<typename Derived = BaseClass>
-  Derived* get() {return dynamic_cast<Derived*>(m_ptr);}
+  Derived* get() const {return dynamic_cast<Derived*>(m_ptr);}
 
 private:
   BaseClass *m_ptr = nullptr;
@@ -294,6 +294,7 @@ public:
   class Regular {
   public:
     Regular(const std::string& name, const std::unordered_set<std::string>& flags = {}) {
+      std::cout << "Registered [" << name << "]" << std::endl;
       Injectable<BaseClass>::getRegistry()[name] = {
         []()->BaseClass*{return new DerivedClass();},
         [](BaseClass* instance){delete instance;},
@@ -357,5 +358,6 @@ inject<BaseClass_>::inject(const std::string& name) {
     m_ptr = registryEntry.attach();
   } else {
     std::cout << "Could not create " << name << std::endl;
+    // __asm__ __volatile__("int3");
   }
 }

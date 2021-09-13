@@ -62,6 +62,7 @@ endif()
 
 ######################################################################
 # app-lib target
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 set(data_recovery_files
   crash/backup_observer.cpp
@@ -329,14 +330,20 @@ add_library(app-lib
   script/script_menu.h
 
   script/api/app_script.cpp
+  script/api/button_script.cpp
   script/api/cel_script.cpp
   script/api/colormode_script.cpp
   script/api/console_script.cpp
   script/api/dialog_script.cpp
   script/api/document_script.cpp
   script/api/image_script.cpp
+  script/api/intentry_script.cpp
   script/api/layer_script.cpp
+  script/api/label_script.cpp
   script/api/pixelcolor_script.cpp
+  script/api/palette_script.cpp
+  script/api/palettelistbox_script.cpp
+  script/api/storage_script.cpp
   script/api/sprite_script.cpp
   script/api/selection_script.cpp
 
@@ -405,6 +412,7 @@ add_library(app-lib
   ui/keyboard_shortcuts.cpp
   ui/main_menu_bar.cpp
   ui/main_window.cpp
+  ui/news_listbox.cpp
   ui/notifications.cpp
   ui/palette_popup.cpp
   ui/palette_view.cpp

@@ -45,7 +45,7 @@ void Check(const T&){}
 class V8Engine : public Engine {
 public:
   inject<EngineDelegate> m_delegate;
-  v8::Local<v8::Context> *m_context;
+  v8::Global<v8::Context> m_context;
   bool m_printLastResult = false;
   v8::Isolate* m_isolate = nullptr;
 
@@ -54,7 +54,7 @@ public:
     initV8();
   }
 
-  v8::Local<v8::Context>& context() { return *m_context; }
+  v8::Local<v8::Context> context() { return m_context.Get(m_isolate); }
 
   void initV8() {
     static std::unique_ptr<v8::Platform> m_platform;
@@ -72,6 +72,10 @@ public:
     v8::Isolate::CreateParams params;
     params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
     m_isolate = v8::Isolate::New(params);
+
+    v8::Isolate::Scope isolatescope(m_isolate);
+    v8::HandleScope handle_scope(m_isolate);
+    m_context = v8::Global<v8::Context>(m_isolate, v8::Context::New(m_isolate));
   }
 
   void printLastResult() override {
@@ -88,11 +92,9 @@ public:
       v8::Isolate::Scope isolatescope(m_isolate);
       // Create a stack-allocated handle scope.
       v8::HandleScope handle_scope(m_isolate);
-      // Create a new context.
-      v8::Local<v8::Context> context = v8::Context::New(m_isolate);
-      m_context = &context;
+
       // Enter the context for compiling and running the hello world script.
-      v8::Context::Scope context_scope(context);
+      v8::Context::Scope context_scope(context());
 
       v8::TryCatch trycatch(m_isolate);
 
@@ -102,11 +104,11 @@ public:
       v8::Local<v8::String> source = ToLocal(v8::String::NewFromUtf8(m_isolate, code.c_str()));
 
       // Compile the source code.
-      v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context, source);
+      v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context(), source);
       // Run the script to get the result.
       v8::MaybeLocal<v8::Value> result;
       if (!script.IsEmpty()) {
-        result = ToLocal(script)->Run(context);
+          result = ToLocal(script)->Run(context());
       }
 
       if (result.IsEmpty()) {
@@ -114,6 +116,7 @@ public:
           v8::Local<v8::Value> exception = trycatch.Exception();
           v8::String::Utf8Value utf8(m_isolate, exception);
           m_delegate->onConsolePrint(*utf8);
+          std::cout << "Error: [" << *utf8 << "]" << std::endl;
           success = false;
         }
       } else if (m_printLastResult) {
@@ -125,8 +128,9 @@ public:
       err += ex.what();
       m_delegate->onConsolePrint(err.c_str());
       success = false;
+      std::cout << "Error: [" << err << "]" << std::endl;
     }
-    execAfterEval();
+    execAfterEval(success);
     return success;
   }
 };
@@ -203,7 +207,7 @@ public:
 
   void pushFunctions(v8::Local<v8::Object>& object) {
     auto isolate = m_engine.get<V8Engine>()->m_isolate;
-    auto& context = m_engine.get<V8Engine>()->context();
+    auto context = m_engine.get<V8Engine>()->context();
     for (auto& entry : functions) {
       auto tpl = v8::FunctionTemplate::New(isolate, callFunc, v8::External::New(isolate, &entry.second));
       auto func = tpl->GetFunction(context).ToLocalChecked();
@@ -213,36 +217,15 @@ public:
     }
   }
 
-  static void getterFunc(const v8::FunctionCallbackInfo<v8::Value>& args) {
-    auto isolate = args.GetIsolate();
-    v8::HandleScope handle_scope(isolate);
-    auto data = args.Data().As<v8::External>();
-    auto& func = *reinterpret_cast<script::Function*>(data->Value());
-    func();
-    args.GetReturnValue().Set(returnValue(isolate, func.result));
-  }
-
-  static void setterFunc(const v8::FunctionCallbackInfo<v8::Value>& args) {
-    if (args.Length() != 1)
-      return;
-    auto isolate = args.GetIsolate();
-    v8::HandleScope handle_scope(isolate);
-    auto data = args.Data().As<v8::External>();
-    auto& func = *reinterpret_cast<script::Function*>(data->Value());
-    func.arguments.push_back(getValue(isolate, args[0]));
-    func();
-    args.GetReturnValue().Set(returnValue(isolate, func.result));
-  }
-
   void pushProperties(v8::Local<v8::Object>& object) {
     auto& isolate = m_engine.get<V8Engine>()->m_isolate;
-    auto& context = m_engine.get<V8Engine>()->context();
+    auto context = m_engine.get<V8Engine>()->context();
 
     for (auto& entry : properties) {
-      auto getterTpl = v8::FunctionTemplate::New(isolate, getterFunc, v8::External::New(isolate, &entry.second));
+      auto getterTpl = v8::FunctionTemplate::New(isolate, callFunc, v8::External::New(isolate, &entry.second.getter));
       auto getter = getterTpl->GetFunction(context).ToLocalChecked();
 
-      auto setterTpl = v8::FunctionTemplate::New(isolate, setterFunc, v8::External::New(isolate, &entry.second));
+      auto setterTpl = v8::FunctionTemplate::New(isolate, callFunc, v8::External::New(isolate, &entry.second.setter));
       auto setter = setterTpl->GetFunction(context).ToLocalChecked();
 
       v8::PropertyDescriptor descriptor(getter, setter);
@@ -262,7 +245,7 @@ public:
 
   void makeGlobal(const std::string& name) override {
     auto& isolate = m_engine.get<V8Engine>()->m_isolate;
-    auto& context = m_engine.get<V8Engine>()->context();
+    auto context = m_engine.get<V8Engine>()->context();
     Check(context->Global()->Set(context,
                                  ToLocal(v8::String::NewFromUtf8(isolate, name.c_str())),
                                  makeLocal()));

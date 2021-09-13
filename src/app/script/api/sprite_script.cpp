@@ -20,12 +20,19 @@
 class SpriteScriptObject : public script::ScriptObject {
   Provides provides{this, "activeSprite"};
   inject<ScriptObject> m_document{"activeDocument"};
+  inject<ScriptObject> m_pal{"PaletteScriptObject"};
   doc::Sprite* m_sprite;
   std::unordered_map<doc::Layer*, inject<ScriptObject>> m_layers;
   std::unique_ptr<app::Transaction> m_transaction;
 
 public:
-  SpriteScriptObject() : m_sprite{doc()->sprite()} {
+  SpriteScriptObject() {
+    if (m_document) {
+      m_sprite = doc()->sprite();
+      if (m_pal)
+        m_pal->setWrapped(m_sprite->palette(app::frame_t(0)));
+    }
+
     addProperty("layerCount", [this]{return (int) m_sprite->countLayers();})
       .documentation("Read-only. Returns the amount of layers in the sprite.");
     addProperty("filename", [this]{return doc()->filename();})
@@ -48,6 +55,7 @@ public:
       .documentation("Read-only. Returns the sprite's ColorMode.");
     addProperty("selection", [this]{ return this; })
       .documentation("Placeholder. Do not use.");
+    addProperty("palette", [this]{ return m_pal.get(); });
     addMethod("layer", &SpriteScriptObject::layer)
       .arg("layerNumber", "The number of they layer, starting with zero from the bottom.")
       .returns("A Layer object or null if invalid.")

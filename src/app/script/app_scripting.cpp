@@ -53,6 +53,7 @@ namespace app {
 
   bool AppScripting::evalFile(const std::string& fileName) {
     m_fileName = fileName;
+    std::cout << "Reading file " << fileName << std::endl;
     std::ifstream ifs(fileName);
     if (!ifs) {
       std::cout << "Could not open " << fileName << std::endl;
@@ -67,6 +68,8 @@ namespace app {
     AppScripting instance;
     if (!instance.eval({std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()}))
       return false;
+
+    engine->raiseEvent("init");
 
     previousFileName = fileName;
     return true;

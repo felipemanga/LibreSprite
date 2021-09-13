@@ -119,6 +119,7 @@ namespace script {
     }
 
 // STRING
+    Value(std::string&& i) { *this = std::move(i); }
     Value(const std::string& i) { *this = i; }
 
     Value& operator = (const std::string& i) {
@@ -127,7 +128,19 @@ namespace script {
       } else {
         makeUndefined();
         type = Type::STRING;
-        data.string_v = new std::string(i);;
+        data.string_v = new std::string(i);
+      }
+      return *this;
+    }
+
+
+    Value& operator = (std::string&& i) {
+      if (type == Type::STRING) {
+        *data.string_v = std::move(i);
+      } else {
+        makeUndefined();
+        type = Type::STRING;
+        data.string_v = new std::string(std::move(i));
       }
       return *this;
     }

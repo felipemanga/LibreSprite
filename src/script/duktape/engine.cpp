@@ -22,16 +22,10 @@
 #include "script/engine.h"
 #include "script/engine_delegate.h"
 
-class ScriptEngineException : public base::Exception {
-public:
-  ScriptEngineException(duk_errcode_t code, const char* msg)
-    : Exception(std::string(msg) + " (code " + base::convert_to<std::string>(code) + ")") {
-  }
-};
-
 namespace {
-  void on_fatal_handler(duk_context* ctx, duk_errcode_t code, const char* msg) {
-    throw ScriptEngineException(code, msg);
+  void on_fatal_handler(void* ctx, const char* msg) {
+    std::cout << "Error: [" << msg << "]" << std::endl;
+    throw base::Exception(msg);
   }
 
   void* on_alloc_function(void* udata, duk_size_t size) {
@@ -124,6 +118,7 @@ public:
   }
 
   bool raiseEvent(const std::string& event) override {
+    std::cout << "Raising event " + event + "\n" << std::endl;
     return eval("if (typeof onEvent === \"function\") onEvent(\"" + event + "\");");
   }
 
@@ -132,6 +127,7 @@ public:
     try {
       if (duk_peval_string(m_handle, code.c_str()) != 0) {
         printLastResult();
+        std::cout << "Error: [" << duk_safe_to_string(m_handle, -1) << "]" << std::endl;
         success = false;
       }
 
@@ -146,8 +142,9 @@ public:
       err += ex.what();
       m_delegate->onConsolePrint(err.c_str());
       success = false;
+      std::cout << "Error: [" << err << "]" << std::endl;
     }
-    execAfterEval();
+    execAfterEval(success);
     return success;
   }
 };
