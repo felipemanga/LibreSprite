@@ -59,10 +59,9 @@ public:
   void initV8() {
     static std::unique_ptr<v8::Platform> m_platform;
     if (!m_platform) {
-      // Conflicting documentation. Not sure if this is actually needed.
-      // v8::V8::InitializeICUDefaultLocation(base::get_app_path().c_str());
-      // v8::V8::InitializeExternalStartupData(base::get_app_path().c_str());
-      v8::V8::InitializeICU();
+      // Looks like this is only needed on Windows?
+      v8::V8::InitializeICUDefaultLocation(base::get_app_path().c_str());
+      v8::V8::InitializeExternalStartupData(base::get_app_path().c_str());
 
       m_platform = v8::platform::NewDefaultPlatform();
       v8::V8::InitializePlatform(m_platform.get());
