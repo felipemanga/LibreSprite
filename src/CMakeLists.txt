@@ -49,7 +49,7 @@ endif()
 # Add C++11 support only for our code (avoid Allegro)
 
 if(UNIX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-switch -std=gnu++11")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-switch")
 endif()
 
 ######################################################################
@@ -130,6 +130,7 @@ add_executable(libresprite WIN32
   ${x11_resources})
 target_link_libraries(libresprite ${KEEP_INJECTIONS_BEGIN} app-lib ${PLATFORM_LIBS})
 add_dependencies(libresprite copy_data)
+set_property(TARGET libresprite PROPERTY CXX_STANDARD 14)
 
 install(TARGETS libresprite
   RUNTIME DESTINATION bin)

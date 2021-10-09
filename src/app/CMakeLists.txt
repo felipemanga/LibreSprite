@@ -63,8 +63,6 @@ endif()
 ######################################################################
 # app-lib target
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-
 # Debug C/C++ flags
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   if(LINUX)
@@ -491,3 +489,6 @@ target_link_libraries(app-lib
   ${LUA_LIBRARIES}
   ${V8_LIBRARIES}
   ${FREETYPE_LIBRARIES})
+
+set_property(TARGET app-lib PROPERTY CXX_STANDARD 14)
+
