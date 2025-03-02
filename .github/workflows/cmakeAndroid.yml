@@ -35,7 +35,7 @@ jobs:
     - name: Build Application
       run: |
         cd android
-        sh ./gradlew --no-daemon --parallel build
+        sh ./gradlew --no-daemon --parallel --stacktrace build
         cd ..
 #        ls -R android/app/build
     - name: Archive production artifacts
