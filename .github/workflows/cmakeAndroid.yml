@@ -52,18 +52,17 @@ jobs:
         echo "cmake.dir=$CMAKEPATH" > local.properties
         sh ./gradlew --no-daemon --parallel build
     - name: Sign release APK
+      env:
+        ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+        ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
       run: |
         # The gradle release build type is unsigned (ls-android-deps ships a
-        # placeholder signing config), so sign with a per-run generated key.
-        # For a stable signature across releases, replace this with a shared
-        # keystore stored as a repo secret.
+        # placeholder signing config), so sign the release APK here with the
+        # shared release keystore (repo secrets) for a stable signature.
         cd android
-        keytool -genkeypair -v \
-          -keystore libresprite-ci.keystore \
-          -keyalg RSA -keysize 2048 -validity 10000 \
-          -alias libresprite \
-          -storepass libresprite -keypass libresprite \
-          -dname "CN=LibreSprite CI"
+        echo "$ANDROID_KEYSTORE_B64" | base64 -d > libresprite-release.keystore
         BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
         APK=app/build/outputs/apk/all_in_one/release/app-all_in_one-release-unsigned.apk
         if [ ! -f "$APK" ]; then
@@ -74,13 +73,14 @@ jobs:
         "$BUILD_TOOLS/zipalign" -f 4 "$APK" "$APK.aligned"
         mv "$APK.aligned" "$APK"
         "$BUILD_TOOLS/apksigner" sign \
-          --ks libresprite-ci.keystore \
-          --ks-key-alias libresprite \
-          --ks-pass pass:libresprite \
-          --key-pass pass:libresprite \
+          --ks libresprite-release.keystore \
+          --ks-key-alias "$ANDROID_KEY_ALIAS" \
+          --ks-pass pass:"$ANDROID_KEYSTORE_PASS" \
+          --key-pass pass:"$ANDROID_KEY_PASS" \
           "$APK"
         "$BUILD_TOOLS/apksigner" verify --print-certs "$APK"
         mv "$APK" app/build/outputs/apk/all_in_one/release/app-all_in_one-release.apk
+        rm libresprite-release.keystore
     - name: Archive production artifacts
       uses: actions/upload-artifact@v7
       with:
