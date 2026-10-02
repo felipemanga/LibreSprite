@@ -34,6 +34,7 @@
 #include "doc/primitives.h"
 #include "doc/site.h"
 #include "ui/system.h"
+#include "base/benchmark.h"
 
 namespace app {
 
@@ -81,6 +82,7 @@ color_t BrushPreview::getBrushColor(Sprite* sprite, Layer* layer)
 // to use this routine with other editor.
 void BrushPreview::show(const gfx::Point& screenPos)
 {
+  Benchmark::Probe p;
   if (m_onScreen)
     hide();
 
@@ -249,6 +251,7 @@ void BrushPreview::show(const gfx::Point& screenPos)
 // called showBrushPreview() before.
 void BrushPreview::hide()
 {
+  Benchmark::Probe p;
   if (!m_onScreen)
     return;
 
@@ -288,6 +291,7 @@ void BrushPreview::hide()
 
 void BrushPreview::redraw()
 {
+  Benchmark::Probe p;
   if (m_onScreen) {
     gfx::Point screenPos = m_screenPosition;
     hide();
@@ -297,11 +301,13 @@ void BrushPreview::redraw()
 
 void BrushPreview::invalidateRegion(const gfx::Region& region)
 {
+  Benchmark::Probe p;
   m_clippingRegion.createSubtraction(m_clippingRegion, region);
 }
 
 void BrushPreview::generateBoundaries()
 {
+  Benchmark::Probe p;
   BrushRef brush = getCurrentBrush();
 
   if (m_brushBoundaries &&
@@ -349,6 +355,7 @@ void BrushPreview::forEachBrushPixel(
   gfx::Color color,
   PixelDelegate pixelDelegate)
 {
+  Benchmark::Probe p;
   m_savedPixelsIterator = 0;
 
   if (m_type & CROSS)
@@ -373,6 +380,7 @@ void BrushPreview::traceCrossPixels(
   const gfx::Point& pt, gfx::Color color,
   PixelDelegate pixelDelegate)
 {
+  Benchmark::Probe p;
   static int cross[7*7] = {
     0, 0, 0, 1, 0, 0, 0,
     0, 0, 0, 1, 0, 0, 0,
@@ -404,6 +412,7 @@ void BrushPreview::traceSelectionCrossPixels(
   const gfx::Point& pt, gfx::Color color,
   int thickness, PixelDelegate pixelDelegate)
 {
+  Benchmark::Probe p;
   static int cross[6*6] = {
     0, 0, 1, 1, 0, 0,
     0, 0, 1, 1, 0, 0,
@@ -440,6 +449,7 @@ void BrushPreview::traceBrushBoundaries(ui::Graphics* g,
                                         gfx::Color color,
                                         PixelDelegate pixelDelegate)
 {
+  Benchmark::Probe p;
   pos.x -= m_brushWidth/2;
   pos.y -= m_brushHeight/2;
 
@@ -467,6 +477,7 @@ void BrushPreview::traceBrushBoundaries(ui::Graphics* g,
 
 void BrushPreview::savePixelDelegate(ui::Graphics* g, const gfx::Point& pt, gfx::Color color)
 {
+  Benchmark::Probe p;
   if (m_clippingRegion.contains(pt)) {
     color_t c = g->getPixel(pt.x, pt.y);
 
@@ -481,6 +492,7 @@ void BrushPreview::savePixelDelegate(ui::Graphics* g, const gfx::Point& pt, gfx:
 
 void BrushPreview::drawPixelDelegate(ui::Graphics* gfx, const gfx::Point& pt, gfx::Color color)
 {
+  Benchmark::Probe p;
   if (m_savedPixelsIterator < (int)m_savedPixels.size() &&
       m_clippingRegion.contains(pt)) {
     if (m_blackAndWhiteNegative) {
@@ -499,6 +511,7 @@ void BrushPreview::drawPixelDelegate(ui::Graphics* gfx, const gfx::Point& pt, gf
 
 void BrushPreview::clearPixelDelegate(ui::Graphics* g, const gfx::Point& pt, gfx::Color color)
 {
+  Benchmark::Probe p;
   if (m_savedPixelsIterator < (int)m_savedPixels.size()) {
     if (m_oldClippingRegion.contains(pt)) {
       if (m_clippingRegion.contains(pt))

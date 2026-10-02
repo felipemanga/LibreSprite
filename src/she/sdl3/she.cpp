@@ -4,6 +4,7 @@
 // This file is released under the terms of the MIT license.
 // Read LICENSE.txt for more information.
 
+#include "base/benchmark.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -317,6 +318,7 @@ namespace she {
     }
 
     void forceFlip() {
+      Benchmark::Probe p;
       for (auto& entry : sdl::windowIdToDisplay) {
         entry.second->flip({
             0,
@@ -329,6 +331,7 @@ namespace she {
     }
 
     void refresh() {
+      Benchmark::Probe p;
       if (!m_events.empty())
 	return;
       Event event;
@@ -668,6 +671,7 @@ namespace she {
     Timestamp start = std::chrono::high_resolution_clock::now();
 
     void sleep() override {
+      Benchmark::Probe p;
       using namespace std::chrono_literals;
       if (shutdown)
 	return;
@@ -696,6 +700,7 @@ namespace she {
 
     std::function<int()> m_func;
     int run(std::function<int()>&& func) override {
+      Benchmark::Probe p;
       gfxThreadId = std::this_thread::get_id();
       #ifndef EMSCRIPTEN
       mainThreadId = gfxThreadId;
@@ -764,6 +769,7 @@ namespace she {
     }
 
     void refresh() {
+      Benchmark::Probe p;
       if (!sleeping) {
 	static_cast<SDL3EventQueue*>(EventQueue::instance())->refresh();
 	return;

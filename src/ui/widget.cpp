@@ -6,6 +6,7 @@
 
 // #define REPORT_SIGNALS
 
+#include "base/benchmark.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -706,6 +707,7 @@ void Widget::getRegion(gfx::Region& region)
 
 void Widget::getDrawableRegion(gfx::Region& region, DrawableRegionFlags flags)
 {
+  Benchmark::Probe p;
   Widget* window, *manager, *view;
 
   getRegion(region);

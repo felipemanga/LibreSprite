@@ -4,6 +4,7 @@
 // This file is released under the terms of the MIT license.
 // Read LICENSE.txt for more information.
 
+#include "base/benchmark.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -141,6 +142,7 @@ Region& Region::createUnion(const Region& a, const Region& b)
 
 Region& Region::createSubtraction(const Region& a, const Region& b)
 {
+  Benchmark::Probe p;
   pixman_region32_subtract(&m_region, &a.m_region, &b.m_region);
   return *this;
 }

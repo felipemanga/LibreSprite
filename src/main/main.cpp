@@ -14,6 +14,7 @@
 #include "app/console.h"
 #include "app/resource_finder.h"
 #include "app/send_crash.h"
+#include "base/benchmark.h"
 #include "base/exception.h"
 #include "base/memory.h"
 #include "base/memory_dump.h"
@@ -54,6 +55,8 @@ namespace {
 // Aseprite entry point. (Called from she library.)
 int app_main(int argc, char* argv[])
 {
+  Benchmark::Sampler s {true};
+
   // Initialize the locale. Aseprite isn't ready to handle numeric
   // fields with other locales (e.g. we expect strings like "10.32" be
   // used in std::strtod(), not something like "10,32").

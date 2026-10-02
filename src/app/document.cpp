@@ -5,6 +5,7 @@
 // it under the terms of the GNU General Public License version 2 as
 // published by the Free Software Foundation.
 
+#include "base/benchmark.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -106,6 +107,7 @@ void Document::notifyGeneralUpdate()
 
 void Document::notifySpritePixelsModified(Sprite* sprite, const gfx::Region& region, frame_t frame)
 {
+  Benchmark::Probe p;
   doc::DocumentEvent ev(this);
   ev.sprite(sprite);
   ev.region(region);

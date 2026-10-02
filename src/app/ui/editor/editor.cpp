@@ -5,6 +5,7 @@
 // it under the terms of the GNU General Public License version 2 as
 // published by the Free Software Foundation.
 
+#include "base/benchmark.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -245,6 +246,7 @@ WidgetType editor_type()
 
 void Editor::setStateInternal(const EditorStatePtr& newState)
 {
+  Benchmark::Probe p;
   m_brushPreview.hide();
 
   // Fire before change state event, set the state, and fire after
@@ -1091,6 +1093,7 @@ void Editor::updateQuicktool()
 
 void Editor::updateToolByTipProximity(ui::PointerType pointerType)
 {
+  Benchmark::Probe p;
   auto activeToolManager = App::instance()->activeToolManager();
 
   if (pointerType == ui::PointerType::Eraser) {
@@ -1187,6 +1190,7 @@ app::Color Editor::getColorByPosition(const gfx::Point& mousePos)
 
 bool Editor::onProcessMessage(Message* msg)
 {
+  Benchmark::Probe p;
   switch (msg->type()) {
 
     case kTimerMessage:
